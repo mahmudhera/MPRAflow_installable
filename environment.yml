@@ -1,0 +1,10 @@
+name: MPRAflow
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # Nextflow 20.10 is the version declared by conf/global.config.
+  # MPRAflow is a DSL1-era workflow; do not install the latest Nextflow here.
+  - nextflow=20.10.0
+  - openjdk=11

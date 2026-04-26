@@ -1,0 +1,17 @@
+name: mpraflow_py27
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # Python 2 is still required by several MPRAflow scripts.  Keep this
+  # environment deliberately small so the solver only has to resolve the
+  # Python-2-compatible tools those scripts actually import/call.
+  - python=2.7
+  - "pip<21"
+  - "setuptools<45"
+  - wheel
+  - "pysam=0.15.*"
+  - samtools=1.9
+  - bcftools=1.9
+  - htslib=1.9

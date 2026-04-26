@@ -1,0 +1,15 @@
+name: mpraflow_r
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # The R scripts only use dplyr, ggplot2, tidyr, stringr and Cairo-backed PNGs.
+  # A modern R removes the old R-3.3.2/R-package conflict surface.
+  - "r-base>=4.2,<5"
+  - r-dplyr
+  - r-ggplot2
+  - r-tidyr
+  - r-stringr
+  - r-cairo
+  - cairo

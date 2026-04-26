@@ -1,0 +1,26 @@
+name: mpraflow_py36
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # Kept as mpraflow_py36.yml because the Nextflow files reference this path.
+  # The scripts using this environment are Python-3-compatible, so we use a
+  # currently supported Python rather than the end-of-life Python 3.6 stack.
+  - python=3.9
+  - pip
+  - "numpy<2"
+  - "pandas<2"
+  - "dask>=2022.1,<2023"
+  - "pyarrow>=8,<12"
+  - "biopython>=1.79"
+  - "pysam>=0.19"
+  - click
+  - matplotlib-base
+  - seaborn
+  - tqdm
+  - "bwa>=0.7.17"
+  - "samtools>=1.9,<2"
+  - fastq-join
+  - fastqc
+  - picard
