@@ -262,15 +262,15 @@ if (!params.no_umi) {
             echo $umi_fastq
             echo $rev_fastq
 
-            umi_length=`zcat $umi_fastq | head -2 | tail -1 | wc -c`
+            umi_length=`gzip -dc $umi_fastq | head -2 | tail -1 | wc -c`
             umi_length=\$(expr \$((\$umi_length-1)))
 
-            fwd_length=`zcat $fw_fastq | head -2 | tail -1 | wc -c`
+            fwd_length=`gzip -dc $fw_fastq | head -2 | tail -1 | wc -c`
             fwd_length=\$(expr \$((\$fwd_length-1)))
 
             rev_start=\$(expr \$((\$fwd_length+1)))
 
-            rev_length=`zcat $rev_fastq | head -2 | tail -1 | wc -c`
+            rev_length=`gzip -dc $rev_fastq | head -2 | tail -1 | wc -c`
             rev_length=\$(expr \$((\$rev_length-1)))
 
             minoverlap=`echo \${fwd_length} \${fwd_length} $bc_length | awk '{print (\$1+\$2-\$3-1 < 11) ? \$1+\$2-\$3-1 : 11}'`
@@ -279,7 +279,7 @@ if (!params.no_umi) {
             echo \$umi_length
             echo \$minoverlap
 
-            paste <( zcat $fw_fastq ) <( zcat $rev_fastq  ) <( zcat $umi_fastq ) | awk '{if (NR % 4 == 2 || NR % 4 == 0) {print \$1\$2\$3} else {print \$1}}' | python ${"$baseDir"}/src/FastQ2doubleIndexBAM.py -p -s \$rev_start -l 0 -m \$umi_length --RG ${datasetID} | python ${"$baseDir"}/src/MergeTrimReadsBAM.py --FirstReadChimeraFilter '' --adapterFirstRead '' --adapterSecondRead '' -p --mergeoverlap --minoverlap \$minoverlap > ${datasetID}.bam
+            paste <( gzip -dc $fw_fastq ) <( gzip -dc $rev_fastq  ) <( gzip -dc $umi_fastq ) | awk '{if (NR % 4 == 2 || NR % 4 == 0) {print \$1\$2\$3} else {print \$1}}' | python ${"$baseDir"}/src/FastQ2doubleIndexBAM.py -p -s \$rev_start -l 0 -m \$umi_length --RG ${datasetID} | python ${"$baseDir"}/src/MergeTrimReadsBAM.py --FirstReadChimeraFilter '' --adapterFirstRead '' --adapterSecondRead '' -p --mergeoverlap --minoverlap \$minoverlap > ${datasetID}.bam
             """
     }
 }
@@ -310,12 +310,12 @@ if (params.no_umi) {
             echo $fw_fastq
             echo $rev_fastq
 
-            fwd_length=`zcat $fw_fastq | head -2 | tail -1 | wc -c`
+            fwd_length=`gzip -dc $fw_fastq | head -2 | tail -1 | wc -c`
             fwd_length=\$(expr \$((\$fwd_length-1)))
 
             rev_start=\$(expr \$((\$fwd_length+1)))
 
-            rev_length=`zcat $rev_fastq | head -2 | tail -1 | wc -c`
+            rev_length=`gzip -dc $rev_fastq | head -2 | tail -1 | wc -c`
             rev_length=\$(expr \$((\$rev_length-1)))
 
             minoverlap=`echo \${fwd_length} \${fwd_length} $bc_length | awk '{print (\$1+\$2-\$3-1 < 11) ? \$1+\$2-\$3-1 : 11}'`
@@ -323,7 +323,7 @@ if (params.no_umi) {
             echo \$rev_start
             echo \$minoverlap
 
-            paste <( zcat $fw_fastq ) <(zcat $rev_fastq  ) | \
+            paste <( gzip -dc $fw_fastq ) <(gzip -dc $rev_fastq  ) | \
             awk '{
                 if (NR % 4 == 2 || NR % 4 == 0) {
                   print \$1\$2
@@ -398,7 +398,7 @@ process 'filter_counts'{
         """
         bc=$bcLength
         echo \$bc
-        zcat $rc | grep -v "N" | \
+        gzip -dc $rc | grep -v "N" | \
         awk -v var="\$bc" -v 'OFS=\t' '{ if (length(\$1) == var) { print } }' | \
         gzip -c > ${datasetID}_filtered_counts.tsv.gz
         """
@@ -423,7 +423,7 @@ process 'final_counts'{
             """
             #!/bin/bash
 
-            zcat $fc | awk '{print \$1}' | \
+            gzip -dc $fc | awk '{print \$1}' | \
             uniq -c > ${datasetID}_counts.tsv
 
             """
@@ -433,11 +433,11 @@ process 'final_counts'{
 
             for i in $fc; do
               echo \$(basename \$i);
-              zcat \$i | cut -f 2 | sort | uniq -c | sort -nr | head;
+              gzip -dc \$i | cut -f 2 | sort | uniq -c | sort -nr | head;
               echo;
             done > ${params.outdir}/${cond}/${rep}/${datasetID}_freqUMIs.txt
 
-            zcat $fc | awk '{print \$1}' | uniq -c > ${datasetID}_counts.tsv
+            gzip -dc $fc | awk '{print \$1}' | uniq -c > ${datasetID}_counts.tsv
         """
 
 }
