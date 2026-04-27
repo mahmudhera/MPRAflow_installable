@@ -58,8 +58,27 @@ if(data %>% nrow >1){
     data2<-data2 %>% filter(n_obs_bc > thresh, name != 'no_BC')
 
     res <- data1 %>% inner_join(data2,by=c('name'))
+
+    # Some datasets / replicate combinations have no overlapping insert names after
+    # count-table generation and filtering. Record the skipped pair and continue,
+    # rather than failing with a cryptic empty data.frame assignment error.
+    if (nrow(res) < 2) {
+      warning(sprintf("Skipping replicate pair %s vs %s: fewer than two shared inserts after filtering.", r1, r2))
+      outs = as.character(sprintf("%s vs %s: RNA: NA DNA: NA ratio: NA NormSymmetry: NA shared_inserts: %d",
+          r1, r2, nrow(res)))
+      write(outs,file=sprintf("%s_%s_%s_correlation.txt",cond,as.character(r1),as.character(r2)),append=TRUE)
+      next
+    }
+
     if (useLabels){
       res <- res %>% inner_join(label_f, by=c('name'))
+      if (nrow(res) < 2) {
+        warning(sprintf("Skipping replicate pair %s vs %s: fewer than two shared labeled inserts after filtering.", r1, r2))
+        outs = as.character(sprintf("%s vs %s: RNA: NA DNA: NA ratio: NA NormSymmetry: NA shared_labeled_inserts: %d",
+            r1, r2, nrow(res)))
+        write(outs,file=sprintf("%s_%s_%s_correlation.txt",cond,as.character(r1),as.character(r2)),append=TRUE)
+        next
+      }
     } else {
       res$label = args[2]
     }
@@ -123,10 +142,20 @@ for(n in 1:(data%>%nrow)){
     data1 <- read.table(as.character(data[n,]$File),as.is=T,sep="\t",header=T,stringsAsFactors = F) %>% filter(name != 'no_BC')
 
     print(head(data1))
-    print(head(data1$n_obs_b))
+    print(head(data1$n_obs_bc))
     #hist(as.numeric(data1$n_obs_bc), main=paste("replicate", n, sep=' '), xlab=NULL, las=1)
-    hist(as.numeric(data1$n_obs_bc),breaks=100,xlim=c(0,300), main=paste("replicate", data[n,]$Replicate, sep=' '), xlab=NULL, las=1)
-    abline(v=median(as.numeric(data1$n_obs_bc)), lwd=6, col='red')
+    hist_values <- suppressWarnings(as.numeric(data1$n_obs_bc))
+    hist_values <- hist_values[!is.na(hist_values)]
+
+    if (length(hist_values) == 0) {
+        warning(sprintf("No barcode-per-insert values for replicate %s; writing empty histogram panel.", data[n,]$Replicate))
+        plot.new()
+        title(main=paste("replicate", data[n,]$Replicate, sep=' '))
+        text(0.5, 0.5, "No inserts")
+    } else {
+        hist(hist_values, breaks=100, xlim=c(0,300), main=paste("replicate", data[n,]$Replicate, sep=' '), xlab=NULL, las=1)
+        abline(v=median(hist_values), lwd=6, col='red')
+    }
 }
 
 #
