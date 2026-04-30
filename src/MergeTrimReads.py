@@ -17,6 +17,37 @@ import math
 import random
 import string
 
+
+
+"""
+auto mpraflow_random_ge_half = []() -> bool {
+        // MPRAflow uses Python's random.random() >= 0.5 only when two candidate
+        // bases have exactly the same posterior quality.  The original pipeline
+        // does not seed Python's RNG, so exact byte-for-byte reproduction of a
+        // previous MPRAflow run is impossible from this function alone.  This
+        // tiny deterministic generator preserves the 50/50 tie behavior while
+        // keeping this C++ pipeline reproducible.
+        static thread_local std::uint64_t state = 0x9e3779b97f4a7c15ULL;
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        return (state >> 63) != 0;
+    };
+"""
+
+
+def deterministic_random_ge_half():
+    if not hasattr(deterministic_random_ge_half, "state"):
+        deterministic_random_ge_half.state = 0x9e3779b97f4a7c15
+    state = deterministic_random_ge_half.state
+    state ^= (state << 13) & 0xFFFFFFFFFFFFFFFF
+    state ^= (state >> 7) & 0xFFFFFFFFFFFFFFFF
+    state ^= (state << 17) & 0xFFFFFFFFFFFFFFFF
+    deterministic_random_ge_half.state = state
+    return (state >> 63) != 0
+
+
+
 table = string.maketrans('TGCA','ACGT') # COMPLEMENT DNA
 
 
@@ -178,7 +209,7 @@ def cons_base_prob(base1,base2,prob1,prob2):
     val = int(round(-10.0*(thelp-total_prob)))
     hqual = 60 if val > 60 else val
     #sys.stderr.write("\t".join([base1,base2,prob1,prob2,lprob1,lprob2,aprob1,aprob2,help,total_prob,hqual])+"\n")
-    if (hqual > call_quality) or ((hqual == call_quality) and (random.random() >=0.5)):
+    if (hqual > call_quality) or ((hqual == call_quality) and deterministic_random_ge_half()):
       call_base = char_call
       call_quality = hqual
   #sys.stderr.write("\t".join([call_base,call_quality])+"\n")
